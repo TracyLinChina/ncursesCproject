@@ -1,0 +1,92 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include "win_ui.h"
+
+int main(int argc, char **args)
+{
+    /* 初始化窗口 */
+    init_win();
+    int i = 0,flag = 0,x = 0;
+    bug_msg_t *p = (bug_msg_t *)malloc(sizeof(bug_msg_t));
+    if(p == NULL) {
+        return -1;
+    } 
+    user_msg_t *p_1 = (user_msg_t *)malloc(sizeof(user_msg_t));
+    if(p_1 == NULL) {
+        return -1;
+    } 
+    head.next = &head;
+    head.prev = &head;
+    head_user.next = &head_user;
+    head_user.prev = &head_user;
+    x = overload_userList();
+   if( x == -1) {
+        goto joggle;
+   }
+    overload_bugList();
+joggle:    
+    i = boot_screen();
+    switch(i){
+        case 0:
+     	/* 生成窗口边框 */
+            create_frame();
+    	/* 生成消息区 */
+            create_msg_zone();
+    	/* 生成标题窗口 */
+            create_title_window("User Login");
+    	/* 生成登录提示界面 */
+            if(user_login() == 1) {
+                 show_message("No user\nPlease register");
+                 sleep(2);
+                 goto joggle;
+            }            
+            if(user_login() == 0) {
+            core:
+                flag = core_func();
+                switch(flag){
+                    case 0:
+                       p = &head;
+                        if( Add_Bug() == 0) {
+                            File_bugList(p);
+                            goto core;
+                        }else {
+                             exit_win;
+                             return 0;
+                        }
+                    case 1:
+                        if(Selection_Show_Bug() == -1){
+                           goto core;
+                        }else {
+                             p = &head;
+                             File_bugList(p);
+                        }
+                        break;
+                    default:
+                         exit_win();
+                         return 0;
+                }
+            }
+            break;
+        case 1:
+
+            create_frame();
+            /* 生成消息区 */
+            create_msg_zone();
+            /* 生成标题窗口 */
+            create_title_window("User Register");
+       	    if(User_register() == 0) {
+                 p_1 = &head_user;
+                 File_userList(p_1);
+                 goto joggle;
+                 break;
+            }
+            break;
+        default:
+            exit_win();
+            return 0;
+    }
+    /* 输入用户名密码，登陆系统 */
+    /* 退出窗口 */
+    
+}

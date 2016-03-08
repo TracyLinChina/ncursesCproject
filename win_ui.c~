@@ -1,0 +1,231 @@
+#include <string.h>
+#include <ctype.h>
+#include "win_ui.h"
+
+static WINDOW *win=NULL;               /* 框架窗口 */
+static WINDOW *title_win=NULL;         /* 标题窗口 */
+static WINDOW *main_win=NULL;          /* 主窗口   */
+static WINDOW *message_win=NULL;       /* 消息窗口 */
+static WINDOW *register_win=NULL;
+static WINDOW *login_win=NULL;
+static WINDOW *boot_win=NULL;
+static WINDOW *boot_title=NULL;
+static WINDOW *boot_choice[3]={NULL,NULL,NULL};
+static WINDOW *operate_main_win = NULL;
+static WINDOW *operate_win[3] = {NULL,NULL,NULL}; 
+static WINDOW *big = NULL;
+static WINDOW *Add_win = NULL;
+static WINDOW *prompting_frame[2] ={NULL,NULL};
+static WINDOW *show_win = NULL;
+static WINDOW *show_title = NULL;
+static WINDOW *prompting_win = NULL;
+static WINDOW *show_find_win = NULL;
+static WINDOW *show_all_win[10];
+
+
+void init_win(void)
+{
+    /* 初始化虚拟窗口进入ncurses模式 */
+    initscr();
+
+    /*当cbreak模式被开启後，除了DELETE或CTRL
+    等仍被视为特殊控制字元外一切输入的字元将立刻被一一读取。*/
+    cbreak();
+    noecho(); /*关闭回显*/
+}
+
+void exit_win()
+{
+   endwin();
+}
+
+
+void create_msg_zone(void)
+{
+    message_win=newwin(4, 78, 19, 1); /* 提示信息窗口 */
+    keypad(message_win, true);
+    wrefresh(win);
+}
+
+
+void create_frame(void)
+{
+    win=newwin(24, 80, 0, 0);         /* 框架窗口 */
+
+    box(win,0,0);  
+   // mvwhline(win, 22, 1, 0, 78);  /* 画大框架边框 */
+    /* 写入软件系统名 */
+    mvwprintw(win, 0, 25, "Mini BUG Management Systems");
+    /* 画边框横线 */
+    mvwhline(win, 18, 1, 0, 78);
+    mvwprintw(win, 18, 36, "Message");
+    
+    wrefresh(win);
+}
+
+
+void create_title_window(char *s)
+{
+    title_win=newwin(3, 20, 1, 28);   /* 标题窗口 */
+    wclear(title_win);
+    mvwhline(title_win, 0, 1, 0, 18);
+    mvwhline(title_win, 2, 1, 0, 18);
+    mvwprintw(title_win,1,5,s);
+    wrefresh(title_win);
+}
+
+
+void show_message(char *s)
+{
+    wclear(message_win);
+    mvwprintw(message_win,0,0,s);
+    wrefresh(message_win);
+}
+
+
+ 
+void goback_n(WINDOW *win_tmp, int n)
+{
+    int row = 0,col = 0;
+    while(n--) {
+        getyx(win_tmp, row, col);
+        mvwprintw(win_tmp, row, col-1," ");
+        wmove(win_tmp, row, col-1);
+    }
+    wrefresh(win_tmp);
+}
+
+
+void login_register()
+{
+    int y = 0,x = 0,i = 0;
+    char l[] = "LOGIN IN";
+    char *r = "REGISTER";
+    char *e = "EXIT";
+    boot_choice[0] = newwin(1,10,14,(80 - strlen(l))/2);
+    boot_choice[1] = newwin(1,8,16,(80 - strlen(r))/2);
+    boot_choice[2]= newwin(1,5,18,(80 - strlen(e))/2);
+    Color_set();
+    init_pair(3,COLOR_RED,COLOR_BLACK);
+    init_pair(5,COLOR_RED,COLOR_WHITE);
+    wmove(boot_choice[0],0,1);
+    for(i = 0;i < strlen(l);i++) {
+        getyx(boot_choice[0],y,x);
+        mvwaddch(boot_choice[0],y,x,l[i]|COLOR_PAIR(5));
+        wrefresh(boot_choice[0]);
+    }
+    wmove(boot_choice[1],0,1);
+    for(i = 0;i < strlen(r);i++) {
+        getyx(boot_choice[1],y,x);
+        mvwaddch(boot_choice[1],y,x,r[i]|COLOR_PAIR(3));
+        wrefresh(boot_choice[1]);
+    }
+    wmove(boot_choice[2],0,1);
+    for(i = 0;i < strlen(e);i++) {
+        getyx(boot_choice[2],y,x);
+        mvwaddch(boot_choice[2],y,x,e[i]|COLOR_PAIR(3));
+        wrefresh(boot_choice[2]);
+    }
+    
+    return;
+}
+
+
+int boot_screen(void)
+{ 
+    int y = 0,x = 0,i = 0,j = 0,flag = 0,high = 3;
+    char ch;
+    char p_1[] = "FBI WARING";
+    char *p[] = {"Federal law provides civil and criminal penalties  for", "the unauthorized reproduction,distribution,or exhibition of","copyrighted motion prictures (Title 17,United States Code,","Sections 501 and 508). Thefederal bureau of Investigation","investigate allegations of criminal copyright infringement.","(Title 17, United States Code, Section 506)"};
+    boot_win = newwin(24,80,0,0);
+    boot_title = newwin(3,13,3,(80 - strlen(p_1))/2);
+    wrefresh(boot_win);
+    keypad(boot_win,TRUE);
+    Color_set();  
+    wrefresh(boot_win);
+    init_pair(1,COLOR_WHITE,COLOR_RED);
+    init_pair(2,COLOR_WHITE,COLOR_BLACK);
+    init_pair(4,COLOR_RED,COLOR_WHITE);
+    init_pair(6,COLOR_RED,COLOR_BLACK);
+    wmove(boot_title,1,1);
+    for(i = 0;i < strlen(p_1);i++) {
+        getyx(boot_title,y,x);
+        mvwaddch(boot_title,y,x,p_1[i]|COLOR_PAIR(1)|A_BOLD);
+        wrefresh(boot_title);
+    }
+    wrefresh(boot_win);
+    wmove(boot_win,5,80 - strlen(p[0]));
+    for(i = 0;i < 6;i++) {
+        getyx(boot_win,y,x);
+        x = (80 - strlen(p[i]))/2;
+        y = y + 1;
+        wmove(boot_win,y,x);
+        for(j = 0;j < strlen(p[i]);j++) {
+            mvwprintw(boot_win,y,x + j,"%c",p[i][j]|COLOR_PAIR(2));
+            wrefresh(boot_win);
+        }
+    }
+    wrefresh(boot_win);
+    login_register();
+    wmove(boot_win,0,0);
+    wrefresh(boot_choice[0]);
+
+while(1){
+    ch = wgetch(boot_win);
+    switch(ch) {
+        case ENTER:
+             if(flag == 0) {
+                 return 0;
+             }
+             if(flag == 1) {
+                 return 1;
+             }
+             return -1;
+        case (char)KEY_DOWN:
+        case (char)KEY_RIGHT:
+             if(flag >= 2 || flag < 0) {
+                 flag = -1;
+             }
+             flag++;
+             if(flag == 0) {
+       		 wbkgd(boot_choice[flag],COLOR_PAIR(4));
+                 wrefresh(boot_choice[flag]);
+                 wbkgd(boot_choice[2],COLOR_PAIR(6));
+                 wrefresh(boot_choice[2]);
+             }else{
+                 wbkgd(boot_choice[flag],COLOR_PAIR(4));
+                 wrefresh(boot_choice[flag]);
+                 wbkgd(boot_choice[flag - 1],COLOR_PAIR(6));
+                 wrefresh(boot_choice[flag - 1]);
+                 wrefresh(boot_choice[flag]);
+             }
+             break;
+       case (char)KEY_UP:
+       case (char)KEY_LEFT:
+             flag--;
+             if(flag > 2 || flag < 0) {
+                 flag = 2;
+                 wrefresh(boot_win);
+                 wbkgd(boot_choice[flag],COLOR_PAIR(4));
+                 wrefresh(boot_choice[flag]);
+                 wbkgd(boot_choice[0],COLOR_PAIR(6));
+                 wrefresh(boot_choice[0]);
+             }else{
+                 wrefresh(boot_win);
+                 wbkgd(boot_choice[flag],COLOR_PAIR(4));
+                 wrefresh(boot_choice[flag]);
+                 wbkgd(boot_choice[flag + 1],COLOR_PAIR(6));
+                 wrefresh(boot_choice[flag + 1]);
+                 wrefresh(boot_choice[flag]);
+             }
+             break;
+       default:
+             return -1;
+    } 
+} 
+    //exit_win();
+    //return -1;
+}
+
+
+
